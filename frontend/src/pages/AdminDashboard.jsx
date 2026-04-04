@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState ,useEffect} from 'react';
 import FilterModal from '../components/FilterModal';
 import ProductModal from '../components/ProductModal';
+import axiosInstance from '../axiosConfig';
 
 const initialCategories = [
   { id: 1, label: 'Recycle Material',      bg: '#FFF3E0', imageUrl: '/recycle.png'     },
@@ -30,208 +31,208 @@ const COLOR_HEX = {
   white: '#F5F5F5', black: '#212121', brown: '#6D4C41',
 };
 
-const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
-  const [label, setLabel] = useState('');
-  const [bg, setBg] = useState(BG_OPTIONS[0]);
+// const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
+//   const [label, setLabel] = useState('');
+//   const [bg, setBg] = useState(BG_OPTIONS[0]);
 
-  if (!isOpen) return null;
+//   if (!isOpen) return null;
 
-  const handleAdd = () => {
-    if (!label.trim()) return;
-    onAdd({ id: Date.now(), label: label.trim(), bg, imageUrl: '/recycle.png' });
-    setLabel('');
-    setBg(BG_OPTIONS[0]);
-    onClose();
-  };
+//   const handleAdd = () => {
+//     if (!label.trim()) return;
+//     onAdd({ id: Date.now(), label: label.trim(), bg, imageUrl: '/recycle.png' });
+//     setLabel('');
+//     setBg(BG_OPTIONS[0]);
+//     onClose();
+//   };
 
-  return (
-    <>
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.42)',
-          zIndex: 999,
-          backdropFilter: 'blur(2px)',
-        }}
-        onClick={onClose}
-      />
+//   return (
+//     <>
+//       <div
+//         style={{
+//           position: 'fixed',
+//           inset: 0,
+//           background: 'rgba(0,0,0,0.42)',
+//           zIndex: 999,
+//           backdropFilter: 'blur(2px)',
+//         }}
+//         onClick={onClose}
+//       />
 
-      <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: '#fff',
-          borderRadius: 20,
-          width: '92%',
-          maxWidth: 440,
-          maxHeight: '88vh',
-          display: 'flex',
-          flexDirection: 'column',
-          zIndex: 1000,
-          boxShadow: '0 24px 60px rgba(0,0,0,0.16)',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '20px 24px 16px',
-            borderBottom: '1px solid #f0f0f0',
-          }}
-        >
-          <h2 style={{ fontSize: 19, fontWeight: 700, margin: 0, letterSpacing: '-0.4px' }}>
-            Add Category
-          </h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: '#f5f5f5',
-              border: 'none',
-              borderRadius: '50%',
-              width: 32,
-              height: 32,
-              fontSize: 14,
-              cursor: 'pointer',
-              color: '#555',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            ✕
-          </button>
-        </div>
+//       <div
+//         style={{
+//           position: 'fixed',
+//           top: '50%',
+//           left: '50%',
+//           transform: 'translate(-50%, -50%)',
+//           background: '#fff',
+//           borderRadius: 20,
+//           width: '92%',
+//           maxWidth: 440,
+//           maxHeight: '88vh',
+//           display: 'flex',
+//           flexDirection: 'column',
+//           zIndex: 1000,
+//           boxShadow: '0 24px 60px rgba(0,0,0,0.16)',
+//           overflow: 'hidden',
+//         }}
+//       >
+//         {/* Header */}
+//         <div
+//           style={{
+//             display: 'flex',
+//             alignItems: 'center',
+//             justifyContent: 'space-between',
+//             padding: '20px 24px 16px',
+//             borderBottom: '1px solid #f0f0f0',
+//           }}
+//         >
+//           <h2 style={{ fontSize: 19, fontWeight: 700, margin: 0, letterSpacing: '-0.4px' }}>
+//             Add Category
+//           </h2>
+//           <button
+//             onClick={onClose}
+//             style={{
+//               background: '#f5f5f5',
+//               border: 'none',
+//               borderRadius: '50%',
+//               width: 32,
+//               height: 32,
+//               fontSize: 14,
+//               cursor: 'pointer',
+//               color: '#555',
+//               display: 'flex',
+//               alignItems: 'center',
+//               justifyContent: 'center',
+//             }}
+//           >
+//             ✕
+//           </button>
+//         </div>
 
-        <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1 }}>
-          <label
-            style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 8 }}
-          >
-            Category Name
-          </label>
-          <input
-            type="text"
-            placeholder="e.g. Zero Waste"
-            value={label}
-            onChange={e => setLabel(e.target.value)}
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              padding: '11px 14px',
-              border: '1.5px solid #e0e0e0',
-              borderRadius: 10,
-              fontSize: 14,
-              fontFamily: 'inherit',
-              color: '#1a1a1a',
-              background: '#fafafa',
-              outline: 'none',
-            }}
-          />
+//         <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1 }}>
+//           <label
+//             style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 8 }}
+//           >
+//             Category Name
+//           </label>
+//           <input
+//             type="text"
+//             placeholder="e.g. Zero Waste"
+//             value={label}
+//             onChange={e => setLabel(e.target.value)}
+//             style={{
+//               width: '100%',
+//               boxSizing: 'border-box',
+//               padding: '11px 14px',
+//               border: '1.5px solid #e0e0e0',
+//               borderRadius: 10,
+//               fontSize: 14,
+//               fontFamily: 'inherit',
+//               color: '#1a1a1a',
+//               background: '#fafafa',
+//               outline: 'none',
+//             }}
+//           />
 
-          <label
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#555',
-              display: 'block',
-              marginBottom: 8,
-              marginTop: 18,
-            }}
-          >
-            Background Colour
-          </label>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
-            {BG_OPTIONS.map(c => (
-              <button
-                key={c}
-                onClick={() => setBg(c)}
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  background: c,
-                  border: bg === c ? '3px solid #286934' : '2px solid #ddd',
-                  boxShadow: bg === c ? '0 0 0 2px #286934' : 'none',
-                  transition: 'all 0.15s',
-                }}
-              />
-            ))}
-          </div>
+//           <label
+//             style={{
+//               fontSize: 13,
+//               fontWeight: 600,
+//               color: '#555',
+//               display: 'block',
+//               marginBottom: 8,
+//               marginTop: 18,
+//             }}
+//           >
+//             Background Colour
+//           </label>
+//           <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
+//             {BG_OPTIONS.map(c => (
+//               <button
+//                 key={c}
+//                 onClick={() => setBg(c)}
+//                 style={{
+//                   width: 34,
+//                   height: 34,
+//                   borderRadius: 8,
+//                   cursor: 'pointer',
+//                   background: c,
+//                   border: bg === c ? '3px solid #286934' : '2px solid #ddd',
+//                   boxShadow: bg === c ? '0 0 0 2px #286934' : 'none',
+//                   transition: 'all 0.15s',
+//                 }}
+//               />
+//             ))}
+//           </div>
 
-          <div
-            style={{
-              borderRadius: 12,
-              padding: '14px 18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              border: '1.5px solid rgba(0,0,0,0.06)',
-              background: bg,
-            }}
-          >
-            <span style={{ fontSize: 13, color: '#555' }}>Preview</span>
-            <span style={{ fontWeight: 700, fontSize: 15, color: '#333' }}>
-              {label || 'Category Name'}
-            </span>
-          </div>
-        </div>
+//           <div
+//             style={{
+//               borderRadius: 12,
+//               padding: '14px 18px',
+//               display: 'flex',
+//               alignItems: 'center',
+//               justifyContent: 'space-between',
+//               border: '1.5px solid rgba(0,0,0,0.06)',
+//               background: bg,
+//             }}
+//           >
+//             <span style={{ fontSize: 13, color: '#555' }}>Preview</span>
+//             <span style={{ fontWeight: 700, fontSize: 15, color: '#333' }}>
+//               {label || 'Category Name'}
+//             </span>
+//           </div>
+//         </div>
 
-        <div
-          style={{
-            display: 'flex',
-            gap: 12,
-            padding: '16px 24px',
-            borderTop: '1px solid #f0f0f0',
-          }}
-        >
-          <button
-            onClick={onClose}
-            style={{
-              flex: 1,
-              padding: '12px 0',
-              borderRadius: 12,
-              border: '1.5px solid #ddd',
-              background: '#fff',
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: 'pointer',
-              color: '#555',
-              fontFamily: 'inherit',
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleAdd}
-            disabled={!label.trim()}
-            style={{
-              flex: 2,
-              padding: '12px 0',
-              borderRadius: 12,
-              border: 'none',
-              background: '#286934',
-              fontSize: 14,
-              fontWeight: 700,
-              color: '#fff',
-              fontFamily: 'inherit',
-              boxShadow: '0 4px 12px rgba(40,105,52,0.28)',
-              opacity: label.trim() ? 1 : 0.5,
-              cursor: label.trim() ? 'pointer' : 'not-allowed',
-            }}
-          >
-            Add Category
-          </button>
-        </div>
-      </div>
-    </>
-  );
-};
+//         <div
+//           style={{
+//             display: 'flex',
+//             gap: 12,
+//             padding: '16px 24px',
+//             borderTop: '1px solid #f0f0f0',
+//           }}
+//         >
+//           <button
+//             onClick={onClose}
+//             style={{
+//               flex: 1,
+//               padding: '12px 0',
+//               borderRadius: 12,
+//               border: '1.5px solid #ddd',
+//               background: '#fff',
+//               fontSize: 14,
+//               fontWeight: 600,
+//               cursor: 'pointer',
+//               color: '#555',
+//               fontFamily: 'inherit',
+//             }}
+//           >
+//             Cancel
+//           </button>
+//           <button
+//             onClick={handleAdd}
+//             disabled={!label.trim()}
+//             style={{
+//               flex: 2,
+//               padding: '12px 0',
+//               borderRadius: 12,
+//               border: 'none',
+//               background: '#286934',
+//               fontSize: 14,
+//               fontWeight: 700,
+//               color: '#fff',
+//               fontFamily: 'inherit',
+//               boxShadow: '0 4px 12px rgba(40,105,52,0.28)',
+//               opacity: label.trim() ? 1 : 0.5,
+//               cursor: label.trim() ? 'pointer' : 'not-allowed',
+//             }}
+//           >
+//             Add Category
+//           </button>
+//         </div>
+//       </div>
+//     </>
+//   );
+// };
 
 const AdminDashboard = () => {
   const [categories, setCategories] = useState(initialCategories);
@@ -243,7 +244,7 @@ const AdminDashboard = () => {
   const [addCatOpen, setAddCatOpen] = useState(false);
   const [addProdOpen, setAddProdOpen] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
-
+const [loading, setLoading] = useState(false);
   const openEdit = (product) => {
     setEditProduct(product);
     setAddProdOpen(true);
@@ -259,10 +260,54 @@ const AdminDashboard = () => {
     setCategories(prev => prev.filter(c => c.id !== id));
     if (activeCategory === id) setActiveCategory(null);
   };
-  const handleAddProduct = (prod) => setProducts(prev => [...prev, prod]);
-  const handleUpdateProduct = (updated) =>
-    setProducts(prev => prev.map(p => p.id === updated.id ? updated : p));
-  const handleDeleteProduct = (id) => setProducts(prev => prev.filter(p => p.id !== id));
+
+   const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await axiosInstance.get('/api/products');
+      setProducts(res.data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const handleAddProduct = async (prod) => {
+    try {
+      console.log("prod",prod);
+      
+      await axiosInstance.post('/api/products', prod);
+      fetchProducts();
+    } catch (error) {
+      alert('Add failed',error);
+    }
+  };
+
+  const handleUpdateProduct = async (updated) => {
+    try {
+      await axiosInstance.put(`/api/products/${updated._id}`, updated);
+      fetchProducts();
+    } catch {
+      alert('Update failed');
+    }
+  };
+
+  const handleDeleteProduct = async (id) => {
+    console.log("id",id);
+    
+    try {
+      await axiosInstance.delete(`/api/products/${id}`);
+      fetchProducts();
+    } catch {
+      alert('Delete failed');
+    }
+  };
 
   const activeFilterCount =
     (appliedFilters.priceRange[0] > 0 || appliedFilters.priceRange[1] < 10000 ? 1 : 0) +
@@ -283,6 +328,7 @@ const AdminDashboard = () => {
   const activeCatLabel = activeCategory
     ? categories.find(c => c.id === activeCategory)?.label
     : 'All Products';
+console.log("filteredProducts",filteredProducts);
 
   return (
     <div className="mx-auto mt-20">
@@ -412,7 +458,7 @@ const AdminDashboard = () => {
             </div>
           )}
         </section>
-
+{/* 
         <section style={{ marginBottom: 40 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
             <h2 style={{ fontSize: 22, fontWeight: 700, margin: 0, letterSpacing: '-0.5px' }}>
@@ -525,7 +571,7 @@ const AdminDashboard = () => {
               </div>
             ))}
           </div>
-        </section>
+        </section> */}
 
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
           <div>
@@ -557,7 +603,7 @@ const AdminDashboard = () => {
 
         {filteredProducts.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 20 }}>
-            {filteredProducts.map(product => (
+            {filteredProducts?.map(product => (
               <div
                 key={product.id}
                 style={{
@@ -571,7 +617,7 @@ const AdminDashboard = () => {
                 }}
               >
                 <button
-                  onClick={() => handleDeleteProduct(product.id)}
+                  onClick={() => handleDeleteProduct(product._id)}
                   title="Delete product"
                   style={{
                     position: 'absolute',
@@ -648,6 +694,7 @@ const AdminDashboard = () => {
                   </div>
                 </div>
 
+                {/* Edit button */}
                 <button
                   onClick={() => openEdit(product)}
                   style={{
@@ -703,11 +750,11 @@ const AdminDashboard = () => {
         initialFilters={appliedFilters}
       />
 
-      <AddCategoryModal
+      {/* <AddCategoryModal
         isOpen={addCatOpen}
         onClose={() => setAddCatOpen(false)}
         onAdd={handleAddCategory}
-      />
+      /> */}
 
       <ProductModal
         isOpen={addProdOpen}
