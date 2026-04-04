@@ -4,6 +4,9 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Profile from './pages/Profile';
 import Tasks from './pages/Tasks';
+import CustomerDashboard from './pages/CustomerDashboard';
+import Cart from './pages/Cart';
+import CustomerOrders from './pages/CustomerOrders'
 
 function App() {
   return (
@@ -14,6 +17,9 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/profile" element={<Profile />} />
         <Route path="/tasks" element={<Tasks />} />
+        <Route path="/CustomerDashboard" element={<CustomerDashboard />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/CustomerOrders" element={<CustomerOrders />} />
       </Routes>
     </Router>
   );

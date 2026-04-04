@@ -10,14 +10,19 @@ const Navbar = () => {
     navigate('/login');
   };
 
+  const handleCart =() =>{
+      navigate('/cart');
+  }
   return (
-    <nav className="bg-blue-600 text-white p-4 flex justify-between items-center">
-      <Link to="/" className="text-2xl font-bold">Your apps name</Link>
+    <nav className="bg-blue-600 text-white p-4 flex justify-between items-center" style={{backgroundColor: "#286934"}}>
+      <Link to="/" className="text-2xl font-bold " style={{fontFamily:"Alexandria"}}>EcoMarket</Link>
       <div>
         {user ? (
           <>
-            <Link to="/tasks" className="mr-4">CRUD</Link>
-            <Link to="/profile" className="mr-4">Profile</Link>
+            <Link to="/CustomerDashboard" className="mr-4">Home</Link>
+            <Link to="/CustomerOrders" className="mr-4">My orders</Link>
+            <Link to="/cart" className="mr-4" onClick={handleCart}>Cart</Link>
+            <Link to="/profile" className="mr-4">Profile </Link>
             <button
               onClick={handleLogout}
               className="bg-red-500 px-4 py-2 rounded hover:bg-red-700"
