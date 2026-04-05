@@ -1,28 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import FilterModal from '../components/FilterModal';
 import ProductModal from '../components/ProductModal';
-
-const initialCategories = [
-  { id: 1, label: 'Recycle Material',      bg: '#FFF3E0', imageUrl: '/recycle.png'     },
-  { id: 3, label: 'Eco Friendly Products', bg: '#FCE4EC', imageUrl: '/EcoFriendly.png' },
-  { id: 4, label: 'Eco Fashion',           bg: '#F3E5F5', imageUrl: '/EcoFashion.png'  },
-  { id: 5, label: 'Organic Products',      bg: '#E3F2FD', imageUrl: '/organic.png'     },
-];
-
-const initialProducts = [
-  { id: 1, name: 'Beige Cotton Pant',    price: 24.99, imageUrl: '/CottonPant.png',  categoryId: 4 },
-  { id: 2, name: 'Beige Cotton T shirt', price: 34.99, imageUrl: '/CottonT.png',     categoryId: 4 },
-  { id: 3, name: 'Eco Friendly Bottle',  price: 49.99, imageUrl: '/EcoBottle.png',   categoryId: 3 },
-  { id: 4, name: 'Eco Box',              price: 18.99, imageUrl: '/EcoBox.png',      categoryId: 1 },
-  { id: 5, name: 'Eco Folks',            price: 59.99, imageUrl: '/EcoFolks.png',    categoryId: 3 },
-  { id: 6, name: 'Eco Kitchen Towel',    price: 27.99, imageUrl: '/EcoKitchen.png',  categoryId: 3 },
-  { id: 7, name: 'Eco Plates',           price: 21.99, imageUrl: '/EcoPlates.png',   categoryId: 3 },
-  { id: 8, name: 'Eco Spoon',            price: 89.99, imageUrl: '/EcoSpoon.png',    categoryId: 5 },
-];
+import AddCategoryModal from '../components/AddCategoryModal';
+import axiosInstance from '../axiosConfig';
 
 const defaultFilters = { priceRange: [0, 10000], materials: [], colors: [] };
-
-const BG_OPTIONS = ['#FFF3E0', '#FCE4EC', '#F3E5F5', '#E3F2FD', '#E8F5E9', '#FFF9C4', '#F3E5F5', '#E0F7FA'];
 
 const COLOR_HEX = {
   red: '#E53935', blue: '#1E88E5', yellow: '#FDD835', green: '#43A047',
@@ -30,212 +12,9 @@ const COLOR_HEX = {
   white: '#F5F5F5', black: '#212121', brown: '#6D4C41',
 };
 
-const AddCategoryModal = ({ isOpen, onClose, onAdd }) => {
-  const [label, setLabel] = useState('');
-  const [bg, setBg] = useState(BG_OPTIONS[0]);
-
-  if (!isOpen) return null;
-
-  const handleAdd = () => {
-    if (!label.trim()) return;
-    onAdd({ id: Date.now(), label: label.trim(), bg, imageUrl: '/recycle.png' });
-    setLabel('');
-    setBg(BG_OPTIONS[0]);
-    onClose();
-  };
-
-  return (
-    <>
-      <div
-        style={{
-          position: 'fixed',
-          inset: 0,
-          background: 'rgba(0,0,0,0.42)',
-          zIndex: 999,
-          backdropFilter: 'blur(2px)',
-        }}
-        onClick={onClose}
-      />
-
-      <div
-        style={{
-          position: 'fixed',
-          top: '50%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          background: '#fff',
-          borderRadius: 20,
-          width: '92%',
-          maxWidth: 440,
-          maxHeight: '88vh',
-          display: 'flex',
-          flexDirection: 'column',
-          zIndex: 1000,
-          boxShadow: '0 24px 60px rgba(0,0,0,0.16)',
-          overflow: 'hidden',
-        }}
-      >
-        {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            padding: '20px 24px 16px',
-            borderBottom: '1px solid #f0f0f0',
-          }}
-        >
-          <h2 style={{ fontSize: 19, fontWeight: 700, margin: 0, letterSpacing: '-0.4px' }}>
-            Add Category
-          </h2>
-          <button
-            onClick={onClose}
-            style={{
-              background: '#f5f5f5',
-              border: 'none',
-              borderRadius: '50%',
-              width: 32,
-              height: 32,
-              fontSize: 14,
-              cursor: 'pointer',
-              color: '#555',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-            }}
-          >
-            ✕
-          </button>
-        </div>
-
-        <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1 }}>
-          <label
-            style={{ fontSize: 13, fontWeight: 600, color: '#555', display: 'block', marginBottom: 8 }}
-          >
-            Category Name
-          </label>
-          <input
-            type="text"
-            placeholder="e.g. Zero Waste"
-            value={label}
-            onChange={e => setLabel(e.target.value)}
-            style={{
-              width: '100%',
-              boxSizing: 'border-box',
-              padding: '11px 14px',
-              border: '1.5px solid #e0e0e0',
-              borderRadius: 10,
-              fontSize: 14,
-              fontFamily: 'inherit',
-              color: '#1a1a1a',
-              background: '#fafafa',
-              outline: 'none',
-            }}
-          />
-
-          <label
-            style={{
-              fontSize: 13,
-              fontWeight: 600,
-              color: '#555',
-              display: 'block',
-              marginBottom: 8,
-              marginTop: 18,
-            }}
-          >
-            Background Colour
-          </label>
-          <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap', marginBottom: 18 }}>
-            {BG_OPTIONS.map(c => (
-              <button
-                key={c}
-                onClick={() => setBg(c)}
-                style={{
-                  width: 34,
-                  height: 34,
-                  borderRadius: 8,
-                  cursor: 'pointer',
-                  background: c,
-                  border: bg === c ? '3px solid #286934' : '2px solid #ddd',
-                  boxShadow: bg === c ? '0 0 0 2px #286934' : 'none',
-                  transition: 'all 0.15s',
-                }}
-              />
-            ))}
-          </div>
-
-          <div
-            style={{
-              borderRadius: 12,
-              padding: '14px 18px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              border: '1.5px solid rgba(0,0,0,0.06)',
-              background: bg,
-            }}
-          >
-            <span style={{ fontSize: 13, color: '#555' }}>Preview</span>
-            <span style={{ fontWeight: 700, fontSize: 15, color: '#333' }}>
-              {label || 'Category Name'}
-            </span>
-          </div>
-        </div>
-
-        <div
-          style={{
-            display: 'flex',
-            gap: 12,
-            padding: '16px 24px',
-            borderTop: '1px solid #f0f0f0',
-          }}
-        >
-          <button
-            onClick={onClose}
-            style={{
-              flex: 1,
-              padding: '12px 0',
-              borderRadius: 12,
-              border: '1.5px solid #ddd',
-              background: '#fff',
-              fontSize: 14,
-              fontWeight: 600,
-              cursor: 'pointer',
-              color: '#555',
-              fontFamily: 'inherit',
-            }}
-          >
-            Cancel
-          </button>
-          <button
-            onClick={handleAdd}
-            disabled={!label.trim()}
-            style={{
-              flex: 2,
-              padding: '12px 0',
-              borderRadius: 12,
-              border: 'none',
-              background: '#286934',
-              fontSize: 14,
-              fontWeight: 700,
-              color: '#fff',
-              fontFamily: 'inherit',
-              boxShadow: '0 4px 12px rgba(40,105,52,0.28)',
-              opacity: label.trim() ? 1 : 0.5,
-              cursor: label.trim() ? 'pointer' : 'not-allowed',
-            }}
-          >
-            Add Category
-          </button>
-        </div>
-      </div>
-    </>
-  );
-};
-
 const AdminDashboard = () => {
-  const [categories, setCategories] = useState(initialCategories);
-  const [products, setProducts] = useState(initialProducts);
+  const [categories, setCategories] = useState([]);
+  const [products, setProducts] = useState([]);
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
   const [filterOpen, setFilterOpen] = useState(false);
@@ -243,26 +22,87 @@ const AdminDashboard = () => {
   const [addCatOpen, setAddCatOpen] = useState(false);
   const [addProdOpen, setAddProdOpen] = useState(false);
   const [editProduct, setEditProduct] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  const openEdit = (product) => {
-    setEditProduct(product);
-    setAddProdOpen(true);
+  // ─── Category API ──────────────────────────────────────────────────────────
+
+  const fetchCategories = async () => {
+    try {
+      const res = await axiosInstance.get('/api/categories');
+      setCategories(res.data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to load categories');
+    }
   };
 
-  const closeProductModal = () => {
-    setAddProdOpen(false);
-    setEditProduct(null);
+  // Called by AddCategoryModal after a successful POST — just re-fetch
+  const handleCategoryAdded = () => fetchCategories();
+
+  const handleDeleteCategory = async (id) => {
+    try {
+      await axiosInstance.delete(`/api/categories/${id}`);
+      if (activeCategory === id) setActiveCategory(null);
+      fetchCategories();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete category');
+    }
   };
 
-  const handleAddCategory = (cat) => setCategories(prev => [...prev, cat]);
-  const handleDeleteCategory = (id) => {
-    setCategories(prev => prev.filter(c => c.id !== id));
-    if (activeCategory === id) setActiveCategory(null);
+  // ─── Product API ───────────────────────────────────────────────────────────
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const res = await axiosInstance.get('/api/products');
+      setProducts(res.data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to load products');
+    } finally {
+      setLoading(false);
+    }
   };
-  const handleAddProduct = (prod) => setProducts(prev => [...prev, prod]);
-  const handleUpdateProduct = (updated) =>
-    setProducts(prev => prev.map(p => p.id === updated.id ? updated : p));
-  const handleDeleteProduct = (id) => setProducts(prev => prev.filter(p => p.id !== id));
+
+  const handleAddProduct = async (prod) => {
+    try {
+      await axiosInstance.post('/api/products', prod);
+      fetchProducts();
+    } catch (error) {
+      alert('Add failed', error);
+    }
+  };
+
+  const handleUpdateProduct = async (updated) => {
+    try {
+      await axiosInstance.put(`/api/products/${updated._id}`, updated);
+      fetchProducts();
+    } catch {
+      alert('Update failed');
+    }
+  };
+
+  const handleDeleteProduct = async (id) => {
+    try {
+      await axiosInstance.delete(`/api/products/${id}`);
+      fetchProducts();
+    } catch {
+      alert('Delete failed');
+    }
+  };
+
+  // ─── Bootstrap ────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    fetchCategories();
+    fetchProducts();
+  }, []);
+
+  // ─── Derived state ────────────────────────────────────────────────────────
+
+  const openEdit = (product) => { setEditProduct(product); setAddProdOpen(true); };
+  const closeProductModal = () => { setAddProdOpen(false); setEditProduct(null); };
 
   const activeFilterCount =
     (appliedFilters.priceRange[0] > 0 || appliedFilters.priceRange[1] < 10000 ? 1 : 0) +
@@ -281,7 +121,7 @@ const AdminDashboard = () => {
   );
 
   const activeCatLabel = activeCategory
-    ? categories.find(c => c.id === activeCategory)?.label
+    ? categories.find(c => c._id === activeCategory)?.label
     : 'All Products';
 
   return (
@@ -470,11 +310,11 @@ const AdminDashboard = () => {
 
             {filteredCategories.map(cat => (
               <div
-                key={cat.id}
+                key={cat._id}
                 style={{ position: 'relative', display: 'flex', flexDirection: 'column', alignItems: 'center' }}
               >
                 <button
-                  onClick={() => setActiveCategory(cat.id === activeCategory ? null : cat.id)}
+                  onClick={() => setActiveCategory(cat._id === activeCategory ? null : cat._id)}
                   style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, padding: 4, borderRadius: 12 }}
                 >
                   <div
@@ -486,7 +326,7 @@ const AdminDashboard = () => {
                       alignItems: 'center',
                       justifyContent: 'center',
                       background: cat.bg,
-                      boxShadow: activeCategory === cat.id
+                      boxShadow: activeCategory === cat._id
                         ? '0 0 0 3px #286934'
                         : '0 2px 12px rgba(21,235,103,0.08)',
                       transition: 'all 0.2s ease',
@@ -500,7 +340,7 @@ const AdminDashboard = () => {
                 </button>
 
                 <button
-                  onClick={() => handleDeleteCategory(cat.id)}
+                  onClick={() => handleDeleteCategory(cat._id)}
                   title="Remove category"
                   style={{
                     position: 'absolute',
@@ -555,11 +395,15 @@ const AdminDashboard = () => {
           </button>
         </div>
 
-        {filteredProducts.length > 0 ? (
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#999' }}>
+            <p style={{ fontSize: 16 }}>Loading products...</p>
+          </div>
+        ) : filteredProducts.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 20 }}>
             {filteredProducts.map(product => (
               <div
-                key={product.id}
+                key={product._id}
                 style={{
                   background: '#fff',
                   borderRadius: 16,
@@ -571,7 +415,7 @@ const AdminDashboard = () => {
                 }}
               >
                 <button
-                  onClick={() => handleDeleteProduct(product.id)}
+                  onClick={() => handleDeleteProduct(product._id)}
                   title="Delete product"
                   style={{
                     position: 'absolute',
@@ -706,7 +550,7 @@ const AdminDashboard = () => {
       <AddCategoryModal
         isOpen={addCatOpen}
         onClose={() => setAddCatOpen(false)}
-        onAdd={handleAddCategory}
+        onAdded={handleCategoryAdded}
       />
 
       <ProductModal
