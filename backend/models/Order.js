@@ -6,10 +6,10 @@ const orderItemSchema = new mongoose.Schema({
     ref: 'Product',
     required: true,
   },
-  name:     { type: String,  required: true },
-  imageUrl: { type: String,  default: '' },
-  price:    { type: Number,  required: true },
-  quantity: { type: Number,  required: true, min: 1 },
+  name: { type: String, required: true },
+  imageUrl: { type: String, default: '' },
+  price: { type: Number, required: true },
+  quantity: { type: Number, required: true, min: 1 },
 });
 
 const orderSchema = new mongoose.Schema(
@@ -19,20 +19,38 @@ const orderSchema = new mongoose.Schema(
       ref: 'User',
       required: true,
     },
+
     items: [orderItemSchema],
+
     total: {
       type: Number,
       required: true,
     },
+
     status: {
       type: String,
-      enum: ['Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Completed', 'Cancelled'],
+      enum: [
+        'Processing',
+        'Shipped',
+        'Out for Delivery',
+        'Delivered',
+        'Completed',
+        'Cancelled',
+      ],
       default: 'Processing',
     },
+
+    // ✅ FIXED (object, not string)
     shippingAddress: {
-      type: String,
-      default: '',
+      fullName: String,
+      line1: String,
+      city: String,
+      state: String,
+      zip: String,
+      country: String,
     },
+
+    paymentMethod: String,
   },
   { timestamps: true }
 );

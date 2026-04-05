@@ -1,6 +1,7 @@
 const Order = require('../models/Order');
+const Cart = require('../models/Cart');
 
-//  READ ALL (admin sees every order, newest first, with customer info)
+// ✅ ADMIN - GET ALL
 const getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -14,7 +15,7 @@ const getAllOrders = async (req, res) => {
   }
 };
 
-//  READ ONE
+// ✅ GET SINGLE
 const getOrderById = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
@@ -31,12 +32,20 @@ const getOrderById = async (req, res) => {
   }
 };
 
-//  UPDATE STATUS (admin only — only the status field is touched)
+// ✅ UPDATE STATUS
 const updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
 
-    const allowed = ['Processing', 'Shipped', 'Out for Delivery', 'Delivered', 'Completed', 'Cancelled'];
+    const allowed = [
+      'Processing',
+      'Shipped',
+      'Out for Delivery',
+      'Delivered',
+      'Completed',
+      'Cancelled',
+    ];
+
     if (!allowed.includes(status)) {
       return res.status(400).json({ message: 'Invalid status value' });
     }
@@ -56,14 +65,59 @@ const updateOrderStatus = async (req, res) => {
   }
 };
 
-//  CREATE (called when a customer places an order — ready for when you build that)
-const createOrder = async (req, res) => {
+// ✅ CUSTOMER - GET MY ORDERS
+const getMyOrders = async (req, res) => {
   try {
+    const orders = await Order.find({ customer: req.user.id })
+      .populate('items.product', 'name imageUrl')
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (error) {
+    console.log("error",error);
+    
+    res.status(500).json({ message: error.message });
+  }
+};
+
+//  CHECKOUT 
+const createOrderFromCart = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { address, payment } = req.body;
+
+    const cart = await Cart.findOne({ user: userId });
+
+    if (!cart || cart.items.length === 0) {
+      return res.status(400).json({ message: 'Cart is empty' });
+    }
+
+    const orderItems = cart.items.map((item) => ({
+      product: item.product,
+      name: item.name,
+      imageUrl: item.imageUrl,
+      price: item.price,
+      quantity: item.qty, 
+    }));
+
+    const total = orderItems.reduce(
+      (sum, i) => sum + i.price * i.quantity,
+      0
+    );
+// console.log("order",order);
+
     const order = await Order.create({
-      ...req.body,
-      customer: req.user.id,
+      customer: userId,
+      items: orderItems,
+      total,
+      shippingAddress: address,
+      paymentMethod: payment,
       status: 'Processing',
     });
+
+    // 🔥 clear cart
+    cart.items = [];
+    await cart.save();
 
     res.status(201).json(order);
   } catch (error) {
@@ -75,5 +129,6 @@ module.exports = {
   getAllOrders,
   getOrderById,
   updateOrderStatus,
-  createOrder,
+  getMyOrders,
+  createOrderFromCart,
 };
