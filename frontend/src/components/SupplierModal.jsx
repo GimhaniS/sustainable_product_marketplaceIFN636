@@ -1,16 +1,17 @@
-
 import { useState, useEffect, useRef } from 'react';
+import axiosInstance from '../axiosConfig';
 
-const SupplierModal = ({ isOpen, onClose, onAdd, onUpdate, supplier = null }) => {
+const SupplierModal = ({ isOpen, onClose, onSaved, supplier = null }) => {
   const isEditMode = Boolean(supplier);
   const fileInputRef = useRef(null);
 
-  const [name,          setName]    = useState('');
-  const [licenseNumber, setLicense] = useState('');
-  const [contactNo,     setContact] = useState('');
-  const [address,       setAddress] = useState('');
-  const [logoUrl,       setLogoUrl] = useState('');
+  const [name,          setName]       = useState('');
+  const [licenseNumber, setLicense]    = useState('');
+  const [contactNo,     setContact]    = useState('');
+  const [address,       setAddress]    = useState('');
+  const [logoUrl,       setLogoUrl]    = useState('');
   const [logoPreview,   setLogoPreview] = useState('');
+  const [loading,       setLoading]    = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -51,19 +52,33 @@ const SupplierModal = ({ isOpen, onClose, onAdd, onUpdate, supplier = null }) =>
 
   const isValid = name.trim() && licenseNumber.trim() && contactNo.trim();
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!isValid) return;
     const payload = {
-      id:            supplier?.id ?? Date.now(),
       name:          name.trim(),
       licenseNumber: licenseNumber.trim(),
       contactNo:     contactNo.trim(),
       address:       address.trim(),
       logoUrl:       logoUrl.trim() || null,
     };
-    isEditMode ? onUpdate(payload) : onAdd(payload);
-    resetFields();
-    onClose();
+
+    try {
+      setLoading(true);
+      if (isEditMode) {
+        await axiosInstance.put(`/api/suppliers/${supplier._id}`, payload);
+      } else {
+        await axiosInstance.post('/api/suppliers', payload);
+      }
+      onSaved();      // tell parent to re-fetch
+      resetFields();
+      onClose();
+    } catch (err) {
+      console.error(err);
+      const msg = err.response?.data?.message ?? 'Something went wrong';
+      alert(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -203,18 +218,20 @@ const SupplierModal = ({ isOpen, onClose, onAdd, onUpdate, supplier = null }) =>
           </button>
           <button
             onClick={handleSubmit}
-            disabled={!isValid}
+            disabled={!isValid || loading}
             style={{
               ...styles.confirmBtn,
               background: isEditMode ? '#1565C0' : '#286934',
               boxShadow: isEditMode
                 ? '0 4px 14px rgba(21,101,192,0.3)'
                 : '0 4px 14px rgba(40,105,52,0.3)',
-              opacity: isValid ? 1 : 0.5,
-              cursor: isValid ? 'pointer' : 'not-allowed',
+              opacity: isValid && !loading ? 1 : 0.5,
+              cursor: isValid && !loading ? 'pointer' : 'not-allowed',
             }}
           >
-            {isEditMode ? '💾 Save Changes' : '+ Add Supplier'}
+            {loading
+              ? 'Saving...'
+              : isEditMode ? '💾 Save Changes' : '+ Add Supplier'}
           </button>
         </div>
 
@@ -314,14 +331,8 @@ const styles = {
     fontWeight: 600,
     color: '#333',
   },
-  required: {
-    color: '#e53935',
-  },
-  requiredNote: {
-    fontSize: 12,
-    color: '#bbb',
-    margin: 0,
-  },
+  required: { color: '#e53935' },
+  requiredNote: { fontSize: 12, color: '#bbb', margin: 0 },
   input: {
     width: '100%',
     boxSizing: 'border-box',
@@ -370,9 +381,7 @@ const styles = {
     height: '100%',
     objectFit: 'cover',
   },
-  logoPlaceholder: {
-    fontSize: 28,
-  },
+  logoPlaceholder: { fontSize: 28 },
   logoInputs: {
     display: 'flex',
     flexDirection: 'column',

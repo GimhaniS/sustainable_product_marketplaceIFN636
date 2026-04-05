@@ -1,65 +1,52 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import SupplierModal from '../components/SupplierModal';
-
-const initialSuppliers = [
-  {
-    id: 1,
-    name: 'GreenLeaf Supplies Co.',
-    licenseNumber: 'LIC-2024-00101',
-    contactNo: '+1 (555) 012-3456',
-    address: '42 Eco Street, Green City, CA 90210',
-    logoUrl: null,
-  },
-  {
-    id: 2,
-    name: 'EarthKind Materials',
-    licenseNumber: 'LIC-2024-00202',
-    contactNo: '+1 (555) 987-6543',
-    address: '7 Bamboo Ave, Portland, OR 97201',
-    logoUrl: null,
-  },
-  {
-    id: 3,
-    name: 'PureOrganics Ltd.',
-    licenseNumber: 'LIC-2024-00303',
-    contactNo: '+44 20 7946 0958',
-    address: '18 Harvest Road, Bristol, BS1 4DJ, UK',
-    logoUrl: null,
-  },
-];
+import axiosInstance from '../axiosConfig';
 
 const AdminSuppliers = () => {
-  const [suppliers,    setSuppliers]    = useState(initialSuppliers);
-  const [modalOpen,    setModalOpen]    = useState(false);
-  const [editSupplier, setEditSupplier] = useState(null);
-  const [deleteConfirm, setDeleteConfirm] = useState(null); 
+  const [suppliers,     setSuppliers]     = useState([]);
+  const [modalOpen,     setModalOpen]     = useState(false);
+  const [editSupplier,  setEditSupplier]  = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState(null);
+  const [loading,       setLoading]       = useState(false);
 
-  const openAdd = () => {
-    setEditSupplier(null);
-    setModalOpen(true);
+  // ─── API ──────────────────────────────────────────────────────────────────
+
+  const fetchSuppliers = async () => {
+    try {
+      setLoading(true);
+      const res = await axiosInstance.get('/api/suppliers');
+      setSuppliers(res.data);
+    } catch (err) {
+      console.error(err);
+      alert('Failed to load suppliers');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const openEdit = (supplier) => {
-    setEditSupplier(supplier);
-    setModalOpen(true);
+  useEffect(() => {
+    fetchSuppliers();
+  }, []);
+
+  // Called by SupplierModal after a successful POST or PUT
+  const handleSupplierSaved = () => fetchSuppliers();
+
+  const handleDelete = async (id) => {
+    try {
+      await axiosInstance.delete(`/api/suppliers/${id}`);
+      setDeleteConfirm(null);
+      fetchSuppliers();
+    } catch (err) {
+      console.error(err);
+      alert('Failed to delete supplier');
+    }
   };
 
-  const closeModal = () => {
-    setModalOpen(false);
-    setEditSupplier(null);
-  };
+  // ─── Modal helpers ────────────────────────────────────────────────────────
 
-  const handleAdd = (supplier) =>
-    setSuppliers(prev => [...prev, supplier]);
-
-  const handleUpdate = (updated) =>
-    setSuppliers(prev => prev.map(s => s.id === updated.id ? updated : s));
-
-  const handleDelete = (id) => {
-    setSuppliers(prev => prev.filter(s => s.id !== id));
-    setDeleteConfirm(null);
-  };
-
+  const openAdd = () => { setEditSupplier(null); setModalOpen(true); };
+  const openEdit = (supplier) => { setEditSupplier(supplier); setModalOpen(true); };
+  const closeModal = () => { setModalOpen(false); setEditSupplier(null); };
 
   return (
     <div className="mx-auto mt-20">
@@ -77,12 +64,14 @@ const AdminSuppliers = () => {
           </button>
         </div>
 
-       
-
-        {suppliers.length > 0 ? (
+        {loading ? (
+          <div style={{ textAlign: 'center', padding: '80px 0', color: '#999' }}>
+            <p style={{ fontSize: 16 }}>Loading suppliers...</p>
+          </div>
+        ) : suppliers.length > 0 ? (
           <div style={styles.grid}>
             {suppliers.map(supplier => (
-              <div key={supplier.id} style={styles.card}>
+              <div key={supplier._id} style={styles.card}>
 
                 <div style={styles.cardTop}>
                   <div style={styles.logoWrap}>
@@ -123,16 +112,10 @@ const AdminSuppliers = () => {
                 </div>
 
                 <div style={styles.cardActions}>
-                  <button
-                    onClick={() => openEdit(supplier)}
-                    style={styles.editBtn}
-                  >
+                  <button onClick={() => openEdit(supplier)} style={styles.editBtn}>
                     ✏️ Edit
                   </button>
-                  <button
-                    onClick={() => setDeleteConfirm(supplier.id)}
-                    style={styles.deleteBtn}
-                  >
+                  <button onClick={() => setDeleteConfirm(supplier._id)} style={styles.deleteBtn}>
                     🗑 Delete
                   </button>
                 </div>
@@ -144,37 +127,28 @@ const AdminSuppliers = () => {
           <div style={styles.empty}>
             <p style={styles.emptyIcon}>🏭</p>
             <p style={styles.emptyTitle}>No suppliers found</p>
-            
           </div>
         )}
 
       </main>
 
+      {/* Delete confirmation */}
       {deleteConfirm !== null && (
         <>
-          <div
-            style={styles.confirmBackdrop}
-            onClick={() => setDeleteConfirm(null)}
-          />
+          <div style={styles.confirmBackdrop} onClick={() => setDeleteConfirm(null)} />
           <div style={styles.confirmBox}>
             <p style={styles.confirmIcon}>🗑</p>
             <p style={styles.confirmTitle}>Delete Supplier?</p>
             <p style={styles.confirmSub}>
               This will permanently remove{' '}
-              <strong>{suppliers.find(s => s.id === deleteConfirm)?.name}</strong>.
+              <strong>{suppliers.find(s => s._id === deleteConfirm)?.name}</strong>.
               This action cannot be undone.
             </p>
             <div style={styles.confirmActions}>
-              <button
-                onClick={() => setDeleteConfirm(null)}
-                style={styles.confirmCancelBtn}
-              >
+              <button onClick={() => setDeleteConfirm(null)} style={styles.confirmCancelBtn}>
                 Cancel
               </button>
-              <button
-                onClick={() => handleDelete(deleteConfirm)}
-                style={styles.confirmDeleteBtn}
-              >
+              <button onClick={() => handleDelete(deleteConfirm)} style={styles.confirmDeleteBtn}>
                 Yes, Delete
               </button>
             </div>
@@ -185,8 +159,7 @@ const AdminSuppliers = () => {
       <SupplierModal
         isOpen={modalOpen}
         onClose={closeModal}
-        onAdd={handleAdd}
-        onUpdate={handleUpdate}
+        onSaved={handleSupplierSaved}
         supplier={editSupplier}
       />
 
@@ -233,39 +206,6 @@ const styles = {
     boxShadow: '0 3px 10px rgba(40,105,52,0.25)',
     whiteSpace: 'nowrap',
   },
-  searchWrap: {
-    display: 'flex',
-    alignItems: 'center',
-    background: '#fff',
-    border: '2px solid #e0e0e0',
-    borderRadius: 50,
-    padding: '0 20px',
-    height: 50,
-    gap: 10,
-    maxWidth: 480,
-    marginBottom: 32,
-  },
-  searchIcon: {
-    fontSize: 16,
-    flexShrink: 0,
-  },
-  searchInput: {
-    border: 'none',
-    outline: 'none',
-    flex: 1,
-    fontSize: 15,
-    background: 'transparent',
-    fontFamily: 'inherit',
-    color: '#1a1a1a',
-  },
-  clearBtn: {
-    background: 'none',
-    border: 'none',
-    cursor: 'pointer',
-    fontSize: 13,
-    color: '#bbb',
-    padding: 4,
-  },
   grid: {
     display: 'grid',
     gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
@@ -280,7 +220,6 @@ const styles = {
     flexDirection: 'column',
     gap: 0,
     boxShadow: '0 2px 12px rgba(0,0,0,0.05)',
-    transition: 'box-shadow 0.2s',
   },
   cardTop: {
     display: 'flex',
@@ -398,21 +337,8 @@ const styles = {
     padding: '80px 0',
     color: '#333',
   },
-  emptyIcon: {
-    fontSize: 48,
-    margin: '0 0 16px',
-  },
-  emptyTitle: {
-    fontSize: 18,
-    fontWeight: 700,
-    margin: '0 0 8px',
-  },
-  emptySub: {
-    fontSize: 14,
-    color: '#999',
-    margin: '0 0 24px',
-  },
-
+  emptyIcon: { fontSize: 48, margin: '0 0 16px' },
+  emptyTitle: { fontSize: 18, fontWeight: 700, margin: '0 0 8px' },
   confirmBackdrop: {
     position: 'fixed',
     inset: 0,
@@ -434,26 +360,10 @@ const styles = {
     boxShadow: '0 24px 60px rgba(0,0,0,0.16)',
     textAlign: 'center',
   },
-  confirmIcon: {
-    fontSize: 36,
-    margin: '0 0 12px',
-  },
-  confirmTitle: {
-    fontSize: 18,
-    fontWeight: 700,
-    margin: '0 0 10px',
-    color: '#1a1a1a',
-  },
-  confirmSub: {
-    fontSize: 14,
-    color: '#777',
-    margin: '0 0 24px',
-    lineHeight: 1.5,
-  },
-  confirmActions: {
-    display: 'flex',
-    gap: 10,
-  },
+  confirmIcon: { fontSize: 36, margin: '0 0 12px' },
+  confirmTitle: { fontSize: 18, fontWeight: 700, margin: '0 0 10px', color: '#1a1a1a' },
+  confirmSub: { fontSize: 14, color: '#777', margin: '0 0 24px', lineHeight: 1.5 },
+  confirmActions: { display: 'flex', gap: 10 },
   confirmCancelBtn: {
     flex: 1,
     padding: '11px 0',

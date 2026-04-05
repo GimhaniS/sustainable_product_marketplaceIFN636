@@ -16,6 +16,8 @@ app.use('/api/auth', require('./routes/authRoutes'));
 
 app.use('/api/products', productRoutes);
 app.use('/api/categories', require('./routes/categoryRoutes'));
+app.use('/api/suppliers', require('./routes/suppplierRoutes'));
+app.use('/api/orders', require('./routes/orderRoutes'));
 // Export the app object for testing
 if (require.main === module) {
     connectDB();
