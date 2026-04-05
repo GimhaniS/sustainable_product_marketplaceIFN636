@@ -1,4 +1,4 @@
-# Full Stack MERN Application
+# Eco Market Sustainable product marketplace
 
 This is a basic full stack web application built using React (frontend), Node.js + Express (backend), and MongoDB (database).
 
