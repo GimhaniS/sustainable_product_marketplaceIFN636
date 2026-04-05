@@ -25,14 +25,11 @@ const protect = async (req, res, next) => {
     return res.status(401).json({ message: 'Not authorized, token failed' });
   }
 };
-
-// 🔒 admin only (🔥 THIS WAS MISSING)
 const adminOnly = (req, res, next) => {
   if (req.user && req.user.role === 'admin') {
-    return next();
+    next();
+  } else {
+    res.status(403).json({ message: 'Admin only' });
   }
-  return res.status(403).json({ message: 'Admin only' });
 };
-
-// ✅ FIXED EXPORT
-module.exports = { protect, adminOnly };
+module.exports = { protect ,adminOnly};
