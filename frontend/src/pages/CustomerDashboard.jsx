@@ -11,7 +11,6 @@ const CustomerDashboard = () => {
   const [appliedFilters, setAppliedFilters] = useState(defaultFilters);
   const [categories, setCategories] = useState([]);
   const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(false);
 
   const fetchCategories = async () => {
     try {
@@ -24,14 +23,12 @@ const CustomerDashboard = () => {
   };
   const fetchProducts = async () => {
     try {
-      setLoading(true);
       const res = await axiosInstance.get("/api/products");
       setProducts(res.data);
     } catch (err) {
       console.error(err);
       alert("Failed to load products");
     } finally {
-      setLoading(false);
     }
   };
 

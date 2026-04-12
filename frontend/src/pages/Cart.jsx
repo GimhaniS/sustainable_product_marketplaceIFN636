@@ -3,33 +3,9 @@ import { useNavigate } from "react-router-dom";
 import OrderModal from "../components/OrderModal";
 import axiosInstance from "../axiosConfig";
 
-const initialCartItems = [
-  {
-    id: 1,
-    name: "Beige Cotton Pant",
-    price: 24.99,
-    imageUrl: "/CottonPant.png",
-    qty: 1,
-  },
-  {
-    id: 2,
-    name: "Beige Cotton T shirt",
-    price: 34.99,
-    imageUrl: "/CottonT.png",
-    qty: 2,
-  },
-  {
-    id: 3,
-    name: "Eco Friendly Bottle",
-    price: 49.99,
-    imageUrl: "/EcoBottle.png",
-    qty: 1,
-  },
-];
-
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
-  const [removingId, setRemovingId] = useState(null);
+  const [removingId] = useState(null);
   const [orderModalOpen, setOrderModalOpen] = useState(false);
   const navigate = useNavigate();
   const fetchCart = async () => {
