@@ -6,7 +6,7 @@ const {
   getSupplierById,
   updateSupplier,
   deleteSupplier,
-} = require('../controllers/SupplierController');
+} = require('../controllers/supplierController')
 const { protect } = require('../middleware/authMiddleware');
 
 router.route('/')
