@@ -1,7 +1,7 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const Supplier = require('../models/Supplier');
-const { createSupplier, getSuppliers, getSupplierById, updateSupplier, deleteSupplier } = require('../controllers/SupplierController')
+const { createSupplier, getSuppliers, getSupplierById, updateSupplier, deleteSupplier } = require('../controllers/supplierController');
 const { expect } = chai;
 
 describe('Supplier Controller', () => {
