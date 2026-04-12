@@ -1,59 +1,95 @@
 const chai = require('chai');
 const sinon = require('sinon');
-const Supplier = require('../models/Supplier');
-const { createSupplier, getSuppliers, getSupplierById, updateSupplier, deleteSupplier } = require('../controllers/supplierController');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+const { registerUser, loginUser, getProfile, updateUserProfile } = require('../controllers/authController');
 const { expect } = chai;
 
-describe('Supplier Controller', () => {
+describe('Auth Controller', () => {
   afterEach(() => sinon.restore());
 
-  it('createSupplier: 201 on success', async () => {
-    const created = { _id: 'x', name: 'S' };
-    sinon.stub(Supplier, 'create').resolves(created);
-    const req = { user: { id: 'u' }, body: { name: 'S', licenseNumber: 'L1', contactNo: '123' } };
-    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
-    await createSupplier(req, res);
-    expect(res.status.calledWith(201)).to.be.true;
+  describe('registerUser', () => {
+    it('should return 400 if fields missing', async () => {
+      const req = { body: { name: 'A' } };
+      const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+      await registerUser(req, res);
+      expect(res.status.calledWith(400)).to.be.true;
+    });
+
+    it('should return 400 if user exists', async () => {
+      sinon.stub(User, 'findOne').resolves({ _id: 'x' });
+      const req = { body: { name: 'A', email: 'a@b.com', password: '123456' } };
+      const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+      await registerUser(req, res);
+      expect(res.status.calledWith(400)).to.be.true;
+    });
+
+    it('should create user and return 201', async () => {
+      sinon.stub(User, 'findOne').resolves(null);
+      sinon.stub(User, 'create').resolves({ id: '1', name: 'A', email: 'a@b.com', role: 'customer' });
+      sinon.stub(jwt, 'sign').returns('fake-token');
+      const req = { body: { name: 'A', email: 'a@b.com', password: '123456' } };
+      const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+      await registerUser(req, res);
+      expect(res.status.calledWith(201)).to.be.true;
+    });
   });
 
-  it('createSupplier: 400 on duplicate license', async () => {
-    const err = new Error('dup'); err.code = 11000;
-    sinon.stub(Supplier, 'create').throws(err);
-    const req = { user: { id: 'u' }, body: {} };
-    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
-    await createSupplier(req, res);
-    expect(res.status.calledWith(400)).to.be.true;
+  describe('loginUser', () => {
+    it('should return 400 if email or password missing', async () => {
+      const req = { body: {} };
+      const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+      await loginUser(req, res);
+      expect(res.status.calledWith(400)).to.be.true;
+    });
+
+    it('should return 401 on bad credentials', async () => {
+      sinon.stub(User, 'findOne').resolves(null);
+      const req = { body: { email: 'a@b.com', password: 'x' } };
+      const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+      await loginUser(req, res);
+      expect(res.status.calledWith(401)).to.be.true;
+    });
+
+    it('should login successfully', async () => {
+      sinon.stub(User, 'findOne').resolves({ id: '1', name: 'A', email: 'a@b.com', password: 'hashed', role: 'customer' });
+      sinon.stub(bcrypt, 'compare').resolves(true);
+      sinon.stub(jwt, 'sign').returns('tok');
+      const req = { body: { email: 'a@b.com', password: '123456' } };
+      const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+      await loginUser(req, res);
+      expect(res.json.called).to.be.true;
+    });
   });
 
-  it('getSuppliers: returns sorted list', async () => {
-    const list = [{ name: 'A' }];
-    sinon.stub(Supplier, 'find').returns({ sort: sinon.stub().resolves(list) });
-    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
-    await getSuppliers({}, res);
-    expect(res.json.calledWith(list)).to.be.true;
+  describe('getProfile', () => {
+    it('should return 404 if user not found', async () => {
+      sinon.stub(User, 'findById').resolves(null);
+      const req = { user: { id: 'x' } };
+      const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+      await getProfile(req, res);
+      expect(res.status.calledWith(404)).to.be.true;
+    });
+
+    it('should return profile', async () => {
+      sinon.stub(User, 'findById').resolves({ id: '1', name: 'A', email: 'a@b.com', role: 'customer' });
+      const req = { user: { id: '1' } };
+      const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+      await getProfile(req, res);
+      expect(res.json.called).to.be.true;
+    });
   });
 
-  it('getSupplierById: 404 when missing', async () => {
-    sinon.stub(Supplier, 'findById').resolves(null);
-    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
-    await getSupplierById({ params: { id: 'x' } }, res);
-    expect(res.status.calledWith(404)).to.be.true;
-  });
-
-  it('updateSupplier: success', async () => {
-    const save = sinon.stub().resolves({ name: 'New' });
-    sinon.stub(Supplier, 'findById').resolves({ name: 'Old', save });
-    const req = { params: { id: 'x' }, body: { name: 'New' } };
-    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
-    await updateSupplier(req, res);
-    expect(res.json.called).to.be.true;
-  });
-
-  it('deleteSupplier: success', async () => {
-    const deleteOne = sinon.stub().resolves();
-    sinon.stub(Supplier, 'findById').resolves({ deleteOne });
-    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
-    await deleteSupplier({ params: { id: 'x' } }, res);
-    expect(res.json.calledWith({ message: 'Supplier removed' })).to.be.true;
+  describe('updateUserProfile', () => {
+    it('should update and return user', async () => {
+      const saveStub = sinon.stub().resolves({ id: '1', name: 'New', email: 'a@b.com', role: 'customer' });
+      sinon.stub(User, 'findById').resolves({ id: '1', name: 'Old', email: 'a@b.com', save: saveStub });
+      sinon.stub(jwt, 'sign').returns('tok');
+      const req = { user: { id: '1' }, body: { name: 'New' } };
+      const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+      await updateUserProfile(req, res);
+      expect(res.json.called).to.be.true;
+    });
   });
 });
