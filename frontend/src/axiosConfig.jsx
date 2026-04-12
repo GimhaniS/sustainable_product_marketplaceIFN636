@@ -1,12 +1,13 @@
-import axios from 'axios';
+import axios from "axios";
 
 const axiosInstance = axios.create({
-  baseURL: 'http://localhost:5001',
-  headers: { 'Content-Type': 'application/json' },
+  // baseURL: 'http://localhost:5001',
+  baseURL: "http://16.176.225.29:5001",
+  headers: { "Content-Type": "application/json" },
 });
 
 axiosInstance.interceptors.request.use((config) => {
-  const userInfo = localStorage.getItem('userInfo');
+  const userInfo = localStorage.getItem("userInfo");
 
   if (userInfo) {
     const token = JSON.parse(userInfo).token;
